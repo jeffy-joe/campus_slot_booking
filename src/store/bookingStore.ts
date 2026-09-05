@@ -78,7 +78,7 @@ export function useBookingStore() {
     return `${prefix}${day}${month}${year}${timeNum}`;
   };
 
-  const createBooking = (params: {
+  const createBooking = async (params: {
     sport: SportActivity;
     dateString: string;
     dateKey: string;
@@ -92,7 +92,7 @@ export function useBookingStore() {
     emailPreviewUrl?: string;
     emailError?: string;
     emailSender?: string;
-  }): Booking => {
+  }): Promise<Booking> => {
     const id = generateBookingId(params.sport, params.dateKey, params.timeSlot);
 
     const newBooking: Booking = {
@@ -116,7 +116,7 @@ export function useBookingStore() {
       emailSender: params.emailSender,
     };
 
-    saveBookingToDB(newBooking);
+    await saveBookingToDB(newBooking);
     setBookings(prev => [newBooking, ...prev.filter(b => b.id !== id)]);
     return newBooking;
   };

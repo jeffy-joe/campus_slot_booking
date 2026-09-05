@@ -151,7 +151,7 @@ export const ConfirmBookingView: React.FC<ConfirmBookingViewProps> = ({
       emailError = err?.message || 'Network error communicating with SMTP service';
     }
 
-    onConfirm({
+    await onConfirm({
       sport,
       dateString: date.fullDateString,
       dateKey: date.dateKey,

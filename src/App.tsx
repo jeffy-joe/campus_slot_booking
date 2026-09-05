@@ -294,7 +294,7 @@ export function App() {
     handleNavigate('confirm-booking');
   };
 
-  const handleConfirmBooking = (params: {
+  const handleConfirmBooking = async (params: {
     sport: SportActivity;
     dateString: string;
     dateKey: string;
@@ -309,7 +309,7 @@ export function App() {
     emailError?: string;
     emailSender?: string;
   }) => {
-    const newBooking = createBooking({
+    const newBooking = await createBooking({
       ...params,
       userId: params.userId || currentUser?.id,
     });
