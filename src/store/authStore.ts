@@ -175,11 +175,11 @@ export function useAuthStore() {
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   // 1. Real-time Login (Only verified accounts)
-  const login = (
+  const login = async (
     email: string,
     password: string,
     remember: boolean = true
-  ): { success: boolean; error?: string; user?: User; requiresVerification?: boolean } => {
+  ): Promise<{ success: boolean; error?: string; user?: User; requiresVerification?: boolean }> => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
@@ -207,9 +207,21 @@ export function useAuthStore() {
       }
     }
 
-    const found = globalState.users.find(
+    let found = globalState.users.find(
       u => u.email.trim().toLowerCase() === cleanEmail
     );
+
+    // Attempt live fetch from Supabase DB if not in local memory
+    if (!found) {
+      const dbUsers = await fetchUsersFromDB();
+      if (dbUsers && Array.isArray(dbUsers)) {
+        setGlobalState(prev => ({
+          ...prev,
+          users: dbUsers,
+        }));
+        found = dbUsers.find(u => u.email.trim().toLowerCase() === cleanEmail);
+      }
+    }
 
     if (!found) {
       // Check if there is a pending unverified registration for this email
@@ -222,7 +234,7 @@ export function useAuthStore() {
       }
       return {
         success: false,
-        error: `No verified account found with "${cleanEmail}". Please create an account.`,
+        error: `No verified account found for "${cleanEmail}". Please create an account.`,
       };
     }
 

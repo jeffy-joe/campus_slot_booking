@@ -132,14 +132,14 @@ export const AuthView: React.FC<AuthViewProps> = ({
   }, [showGuestModal, showForgotModal]);
 
   // Handle Login Submit
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
     setLoginPendingVerify(false);
     setLoginLoading(true);
 
     try {
-      const res = login(loginEmail, loginPassword, rememberMe);
+      const res = await login(loginEmail, loginPassword, rememberMe);
       if (res.success) {
         onAuthSuccess(res.user);
       } else {
