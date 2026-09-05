@@ -49,12 +49,22 @@ export const AdminBookingsView: React.FC<AdminBookingsViewProps> = ({
     );
   }, [bookings]);
 
-  // Real-time clock updated every 15 seconds to evaluate upcoming slots accurately
+  const getLocalDateKey = (d: Date = new Date()): string => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  // Real-time clock and local today key updated every 15 seconds
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+  const [todayKey, setTodayKey] = useState<string>(() => getLocalDateKey());
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
+      const now = new Date();
+      setCurrentTime(now);
+      setTodayKey(getLocalDateKey(now));
     }, 15000);
     return () => clearInterval(timer);
   }, []);
@@ -66,8 +76,7 @@ export const AdminBookingsView: React.FC<AdminBookingsViewProps> = ({
   const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   // Default to today — admin sees today's bookings first
-  const todayKey = useMemo(() => new Date().toISOString().split('T')[0], []);
-  const [selectedDate, setSelectedDate] = useState(todayKey);
+  const [selectedDate, setSelectedDate] = useState<string>(() => getLocalDateKey());
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 8;
 
