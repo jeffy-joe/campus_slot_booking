@@ -183,14 +183,14 @@ export const AuthView: React.FC<AuthViewProps> = ({
   };
 
   // Handle Verification Submit
-  const handleVerifySubmit = (e: React.FormEvent) => {
+  const handleVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setVerifyError('');
     setVerifyLoading(true);
 
     try {
       const targetEmail = signupEmail || loginEmail;
-      const res = verifySignup(targetEmail, verificationCode);
+      const res = await verifySignup(targetEmail, verificationCode);
       if (res.success) {
         onAuthSuccess(res.user);
       } else {

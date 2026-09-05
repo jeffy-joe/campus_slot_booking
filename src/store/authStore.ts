@@ -404,10 +404,10 @@ export function useAuthStore() {
   };
 
   // 3. Verify Code and Complete Registration
-  const verifySignup = (
+  const verifySignup = async (
     email: string,
     enteredCode: string
-  ): { success: boolean; error?: string; user?: User } => {
+  ): Promise<{ success: boolean; error?: string; user?: User }> => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanCode = enteredCode.trim();
 
@@ -469,8 +469,8 @@ export function useAuthStore() {
     };
 
     // Save verified user account to Supabase DB and remove pending verification
-    saveUserToDB(newAccount);
-    deletePendingVerificationFromDB(cleanEmail);
+    await saveUserToDB(newAccount);
+    await deletePendingVerificationFromDB(cleanEmail);
 
     // Remove from pending and add to verified users
     setGlobalState(prev => {
