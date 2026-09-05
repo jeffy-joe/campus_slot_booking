@@ -367,12 +367,25 @@ export async function sendVerificationEmail(data: VerificationEmailPayload): Pro
   const from = process.env.SMTP_FROM || (user ? `"Campus Sports Booking" <${user}>` : '"Campus Sports Booking" <no-reply@campus-sports.edu>');
 
   try {
+    let transporter: nodemailer.Transporter;
     const configured = createConfiguredTransporter();
-    if (!configured.isConfigured || !configured.transporter) {
-      throw new Error('SMTP service is not configured in .env');
+
+    if (configured.isConfigured && configured.transporter) {
+      transporter = configured.transporter;
+    } else {
+      console.log('[SMTP] SMTP_USER or SMTP_PASS not configured. Using Ethereal test account fallback.');
+      const testAccount = await nodemailer.createTestAccount();
+      transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
     }
 
-    const transporter = configured.transporter;
     const html = generateVerificationHtml(data);
 
     const info = await transporter.sendMail({

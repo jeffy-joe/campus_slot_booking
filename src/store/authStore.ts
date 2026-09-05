@@ -344,7 +344,17 @@ export function useAuthStore() {
         }),
       });
 
-      const resData = await response.json();
+      let resData: any = {};
+      try {
+        const text = await response.text();
+        resData = JSON.parse(text);
+      } catch {
+        resData = {
+          success: false,
+          error: `Server error (${response.status}). Please check Vercel environment variable settings.`,
+        };
+      }
+
       if (!response.ok || !resData.success) {
         return {
           success: false,
