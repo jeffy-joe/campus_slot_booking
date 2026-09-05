@@ -1,7 +1,7 @@
 import React from 'react';
 import { Menu, LogIn, LogOut, User as UserIcon } from 'lucide-react';
 import type { User } from '../types';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { isNeonConfigured } from '../lib/neon';
 
 interface HeaderProps {
   onOpenMobileMenu: () => void;
@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLogin,
   onSignOut,
 }) => {
-  const isDbLive = isSupabaseConfigured();
+  const isDbLive = isNeonConfigured();
 
   return (
     <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
@@ -34,12 +34,12 @@ export const Header: React.FC<HeaderProps> = ({
       {/* User Header Actions & DB Status */}
       <div className="flex items-center gap-2.5">
         {isDbLive ? (
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold" title="Supabase Database Connected">
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold" title="Neon Database Connected">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>DB Connected</span>
+            <span>DB Connected (Neon)</span>
           </div>
         ) : (
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold" title="Running in local cache. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to Vercel Environment Variables.">
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold" title="Running in local cache. Add DATABASE_URL to Vercel Environment Variables.">
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             <span>Local Mode (DB Disconnected)</span>
           </div>

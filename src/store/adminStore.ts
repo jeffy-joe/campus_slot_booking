@@ -1,16 +1,22 @@
 import { useState, useEffect } from 'react';
 import type { SlotRestriction, Announcement, ActivityCategory } from '../types';
+import {
+  fetchRestrictedSlotsFromDB,
+  saveRestrictedSlotToDB,
+  deleteRestrictedSlotFromDB,
+  fetchAnnouncementsFromDB,
+  saveAnnouncementToDB,
+  deleteAnnouncementFromDB,
+} from '../services/dbService';
 
 const RESTRICTIONS_STORAGE_KEY = 'campus_sports_restrictions_v2';
 const ANNOUNCEMENTS_STORAGE_KEY = 'campus_sports_announcements_v2';
 
 export const INITIAL_RESTRICTIONS: SlotRestriction[] = [];
-
 export const INITIAL_ANNOUNCEMENTS: Announcement[] = [];
 
 function loadRestrictions(): SlotRestriction[] {
   try {
-    // Purge legacy storage with static mock restrictions
     if (typeof localStorage !== 'undefined' && localStorage.getItem('campus_sports_restrictions_v1')) {
       localStorage.removeItem('campus_sports_restrictions_v1');
     }
@@ -27,7 +33,6 @@ function loadRestrictions(): SlotRestriction[] {
 
 function loadAnnouncements(): Announcement[] {
   try {
-    // Remove old legacy v1 key with mock static announcements
     if (typeof localStorage !== 'undefined' && localStorage.getItem('campus_sports_announcements_v1')) {
       localStorage.removeItem('campus_sports_announcements_v1');
     }
@@ -48,9 +53,37 @@ const listeners = new Set<() => void>();
 
 function notify() {
   listeners.forEach(l => l());
+  try {
+    localStorage.setItem(RESTRICTIONS_STORAGE_KEY, JSON.stringify(globalRestrictions));
+    localStorage.setItem(ANNOUNCEMENTS_STORAGE_KEY, JSON.stringify(globalAnnouncements));
+  } catch (e) {
+    console.error('Failed to persist admin data', e);
+  }
 }
 
+const syncAdminFromDB = async () => {
+  const [dbRestrictions, dbAnnouncements] = await Promise.all([
+    fetchRestrictedSlotsFromDB(),
+    fetchAnnouncementsFromDB(),
+  ]);
+  let updated = false;
+  if (dbRestrictions && Array.isArray(dbRestrictions)) {
+    globalRestrictions = dbRestrictions;
+    updated = true;
+  }
+  if (dbAnnouncements && Array.isArray(dbAnnouncements)) {
+    globalAnnouncements = dbAnnouncements;
+    updated = true;
+  }
+  if (updated) {
+    notify();
+  }
+};
+
 if (typeof window !== 'undefined') {
+  syncAdminFromDB();
+  setInterval(syncAdminFromDB, 5000);
+
   window.addEventListener('storage', (e) => {
     if (e.key === ANNOUNCEMENTS_STORAGE_KEY) {
       globalAnnouncements = loadAnnouncements();
@@ -80,21 +113,11 @@ export function useAdminStore() {
 
   const persistRestrictions = (newRestrictions: SlotRestriction[]) => {
     globalRestrictions = newRestrictions;
-    try {
-      localStorage.setItem(RESTRICTIONS_STORAGE_KEY, JSON.stringify(newRestrictions));
-    } catch (e) {
-      console.error('Failed to save restrictions', e);
-    }
     notify();
   };
 
   const persistAnnouncements = (newAnnouncements: Announcement[]) => {
     globalAnnouncements = newAnnouncements;
-    try {
-      localStorage.setItem(ANNOUNCEMENTS_STORAGE_KEY, JSON.stringify(newAnnouncements));
-    } catch (e) {
-      console.error('Failed to save announcements', e);
-    }
     notify();
   };
 
@@ -104,6 +127,7 @@ export function useAdminStore() {
       id: 'rst-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
       createdAt: new Date().toISOString(),
     };
+    saveRestrictedSlotToDB(newRestriction);
     persistRestrictions([newRestriction, ...globalRestrictions]);
     return newRestriction;
   };
@@ -116,15 +140,22 @@ export function useAdminStore() {
       id: 'rst-' + Date.now().toString(36) + '-' + index + '-' + Math.random().toString(36).slice(2, 6),
       createdAt: now,
     }));
+    newRestrictions.forEach(r => saveRestrictedSlotToDB(r));
     persistRestrictions([...newRestrictions, ...globalRestrictions]);
     return newRestrictions;
   };
 
   const removeRestriction = (id: string) => {
+    deleteRestrictedSlotFromDB(id);
     persistRestrictions(globalRestrictions.filter(r => r.id !== id));
   };
 
   const updateRestriction = (id: string, updates: Partial<SlotRestriction>) => {
+    const target = globalRestrictions.find(r => r.id === id);
+    if (target) {
+      const updated = { ...target, ...updates };
+      saveRestrictedSlotToDB(updated);
+    }
     persistRestrictions(
       globalRestrictions.map(r => (r.id === id ? { ...r, ...updates } : r))
     );
@@ -136,15 +167,22 @@ export function useAdminStore() {
       id: 'ann-' + Date.now().toString(36),
       createdAt: new Date().toISOString(),
     };
+    saveAnnouncementToDB(newAnnouncement);
     persistAnnouncements([newAnnouncement, ...globalAnnouncements]);
     return newAnnouncement;
   };
 
   const removeAnnouncement = (id: string) => {
+    deleteAnnouncementFromDB(id);
     persistAnnouncements(globalAnnouncements.filter(a => a.id !== id));
   };
 
   const updateAnnouncement = (id: string, updates: Partial<Announcement>) => {
+    const target = globalAnnouncements.find(a => a.id === id);
+    if (target) {
+      const updated = { ...target, ...updates };
+      saveAnnouncementToDB(updated);
+    }
     persistAnnouncements(
       globalAnnouncements.map(a => (a.id === id ? { ...a, ...updates } : a))
     );
@@ -152,6 +190,10 @@ export function useAdminStore() {
 
   const toggleAnnouncementActive = (id: string) => {
     const target = globalAnnouncements.find(a => a.id === id);
+    if (target) {
+      const updated = { ...target, isActive: !target.isActive };
+      saveAnnouncementToDB(updated);
+    }
     const newStatus = target ? !target.isActive : true;
     persistAnnouncements(
       globalAnnouncements.map(a => (a.id === id ? { ...a, isActive: newStatus } : a))
@@ -168,7 +210,6 @@ export function useAdminStore() {
       const categoryMatch = facilityCategory === 'all' || r.facilityCategory === 'all' || r.facilityCategory === facilityCategory;
       if (!categoryMatch) continue;
 
-      // If this restriction targets a specific sport/game, only apply to that game
       if (r.activityId && r.activityId !== 'all') {
         if (!activityId || r.activityId !== activityId) {
           continue;
@@ -180,7 +221,6 @@ export function useAdminStore() {
           return { isRestricted: true, reason: r.reason, description: r.description };
         }
 
-        // If checking whole day availability, an individual slot restriction does not make the whole day restricted
         if (timeSlot === 'All Day') {
           continue;
         }
@@ -244,6 +284,5 @@ export function isSlotInsideRange(slot: string, range: string): boolean {
     return false;
   }
 
-  // Interval overlap: slot overlaps with range if slotStart < rangeEnd and slotEnd > rangeStart
   return slotStart < rangeEnd && slotEnd > rangeStart;
 }
