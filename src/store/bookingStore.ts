@@ -45,8 +45,14 @@ export function useBookingStore() {
       syncFromDB();
     });
 
+    // 5-second background polling fallback to guarantee multi-device synchronization
+    const pollInterval = setInterval(() => {
+      syncFromDB();
+    }, 5000);
+
     return () => {
       unsubscribe();
+      clearInterval(pollInterval);
     };
   }, [syncFromDB]);
 

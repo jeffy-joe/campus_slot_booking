@@ -118,15 +118,20 @@ let globalState: AuthState = {
   rememberMe: loadRememberMe(),
 };
 
-// Sync users from Supabase on init if configured
-fetchUsersFromDB().then(dbUsers => {
-  if (dbUsers && Array.isArray(dbUsers)) {
-    setGlobalState(prev => ({
-      ...prev,
-      users: dbUsers,
-    }));
-  }
-});
+// Sync users from Supabase on init if configured & poll every 5 seconds
+const syncUsersFromDB = () => {
+  fetchUsersFromDB().then(dbUsers => {
+    if (dbUsers && Array.isArray(dbUsers)) {
+      setGlobalState(prev => ({
+        ...prev,
+        users: dbUsers,
+      }));
+    }
+  });
+};
+
+syncUsersFromDB();
+setInterval(syncUsersFromDB, 5000);
 
 const listeners = new Set<() => void>();
 
