@@ -1,39 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Booking, SportActivity } from '../types';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import {
+  fetchBookingsFromDB,
+  saveBookingToDB,
+  subscribeToRealtimeChanges,
+} from '../services/dbService';
 
 const STORAGE_KEY = 'campus_sports_bookings_v2';
 const LEGACY_STORAGE_KEY = 'campus_sports_bookings_v1';
 
 const DEMO_BOOKING_IDS = ['TT3108260100', 'FS3108260500', 'CR0109260900'];
-
-function mapSupabaseRowToBooking(row: any): Booking {
-  return {
-    id: row.id,
-    activityId: row.activity_id,
-    activityName: row.activity_name,
-    category: row.category,
-    dateString: row.date_string,
-    dateKey: row.date_key,
-    timeSlot: row.time_slot,
-    venue: row.venue,
-    userName: row.user_name,
-    registrationNumber: row.registration_number,
-    userEmail: row.user_email,
-    userId: row.user_id,
-    bookedAt: row.booked_at,
-    status: row.status,
-    cancellationReason: row.cancellation_reason,
-    cancelledBy: row.cancelled_by,
-    cancelledAt: row.cancelled_at,
-    emailDeliveryStatus: row.email_delivery_status || 'sent',
-    emailPreviewUrl: row.email_preview_url,
-    emailError: row.email_error,
-    emailSender: row.email_sender,
-    cancellationEmailStatus: row.cancellation_email_status,
-    cancellationEmailError: row.cancellation_email_error,
-  };
-}
 
 export function useBookingStore() {
   const [bookings, setBookings] = useState<Booking[]>(() => {
@@ -53,51 +29,26 @@ export function useBookingStore() {
     return [];
   });
 
-  // Sync with Supabase on mount & listen to real-time changes if configured
+  const syncFromDB = useCallback(async () => {
+    const dbBookings = await fetchBookingsFromDB();
+    if (dbBookings && Array.isArray(dbBookings)) {
+      setBookings(dbBookings);
+    }
+  }, []);
+
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    // Initial fetch from DB if Supabase is configured
+    syncFromDB();
 
-    let isMounted = true;
-
-    // Fetch live bookings
-    supabase
-      .from('bookings')
-      .select('*')
-      .order('booked_at', { ascending: false })
-      .then(({ data, error }: any) => {
-        if (!error && data && isMounted) {
-          const mapped = data.map(mapSupabaseRowToBooking);
-          setBookings(mapped);
-        }
-      });
-
-    // Subscribe to realtime database changes
-    const channel = supabase
-      .channel('public:bookings')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'bookings' },
-        (payload: any) => {
-          if (!isMounted) return;
-          if (payload.eventType === 'INSERT') {
-            const newB = mapSupabaseRowToBooking(payload.new);
-            setBookings(prev => [newB, ...prev.filter(b => b.id !== newB.id)]);
-          } else if (payload.eventType === 'UPDATE') {
-            const updated = mapSupabaseRowToBooking(payload.new);
-            setBookings(prev => prev.map(b => (b.id === updated.id ? updated : b)));
-          } else if (payload.eventType === 'DELETE') {
-            const deletedId = payload.old.id;
-            setBookings(prev => prev.filter(b => b.id !== deletedId));
-          }
-        }
-      )
-      .subscribe();
+    // Subscribe to live Postgres changes across all browsers
+    const unsubscribe = subscribeToRealtimeChanges(() => {
+      syncFromDB();
+    });
 
     return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
-  }, []);
+  }, [syncFromDB]);
 
   useEffect(() => {
     try {
@@ -165,36 +116,8 @@ export function useBookingStore() {
       emailSender: params.emailSender,
     };
 
+    saveBookingToDB(newBooking);
     setBookings(prev => [newBooking, ...prev.filter(b => b.id !== id)]);
-
-    if (isSupabaseConfigured) {
-      supabase
-        .from('bookings')
-        .upsert({
-          id: newBooking.id,
-          activity_id: newBooking.activityId,
-          activity_name: newBooking.activityName,
-          category: newBooking.category,
-          date_string: newBooking.dateString,
-          date_key: newBooking.dateKey,
-          time_slot: newBooking.timeSlot,
-          venue: newBooking.venue,
-          user_name: newBooking.userName,
-          registration_number: newBooking.registrationNumber,
-          user_email: newBooking.userEmail,
-          user_id: newBooking.userId || null,
-          booked_at: newBooking.bookedAt,
-          status: newBooking.status,
-          email_delivery_status: newBooking.emailDeliveryStatus,
-          email_preview_url: newBooking.emailPreviewUrl || null,
-          email_error: newBooking.emailError || null,
-          email_sender: newBooking.emailSender || null,
-        })
-        .then(({ error }: any) => {
-          if (error) console.error('Supabase booking insert error:', error);
-        });
-    }
-
     return newBooking;
   };
 
@@ -208,33 +131,19 @@ export function useBookingStore() {
     setBookings(prev =>
       prev.map(b => {
         if (b.id.toUpperCase() === id.trim().toUpperCase()) {
-          return {
+          const updated = {
             ...b,
             emailDeliveryStatus: status,
             emailError: error,
             ...(email ? { userEmail: email.trim() } : {}),
             ...(sender ? { emailSender: sender } : {}),
           };
+          saveBookingToDB(updated);
+          return updated;
         }
         return b;
       })
     );
-
-    if (isSupabaseConfigured) {
-      const updates: any = {
-        email_delivery_status: status,
-        email_error: error || null,
-      };
-      if (email) updates.user_email = email.trim();
-      if (sender) updates.email_sender = sender;
-      supabase
-        .from('bookings')
-        .update(updates)
-        .eq('id', id.trim().toUpperCase())
-        .then(({ error: err }: any) => {
-          if (err) console.error('Supabase update email error:', err);
-        });
-    }
   };
 
   const cancelBooking = (
@@ -245,44 +154,25 @@ export function useBookingStore() {
     emailError?: string
   ): boolean => {
     let found = false;
-    const finalReason = reason || (cancelledBy === 'admin' ? 'Cancelled by Campus Administration' : 'Cancelled by Student');
-    const cancelledAt = new Date().toISOString();
-
     setBookings(prev =>
       prev.map(b => {
         if (b.id.toUpperCase() === id.trim().toUpperCase()) {
           found = true;
-          return {
+          const updated: Booking = {
             ...b,
             status: 'cancelled',
-            cancellationReason: finalReason,
+            cancellationReason: reason || (cancelledBy === 'admin' ? 'Cancelled by Campus Administration' : 'Cancelled by Student'),
             cancelledBy,
-            cancelledAt,
+            cancelledAt: new Date().toISOString(),
             ...(emailStatus ? { cancellationEmailStatus: emailStatus } : {}),
             ...(emailError ? { cancellationEmailError: emailError } : {}),
           };
+          saveBookingToDB(updated);
+          return updated;
         }
         return b;
       })
     );
-
-    if (isSupabaseConfigured && found) {
-      supabase
-        .from('bookings')
-        .update({
-          status: 'cancelled',
-          cancellation_reason: finalReason,
-          cancelled_by: cancelledBy,
-          cancelled_at: cancelledAt,
-          ...(emailStatus ? { cancellation_email_status: emailStatus } : {}),
-          ...(emailError ? { cancellation_email_error: emailError } : {}),
-        })
-        .eq('id', id.trim().toUpperCase())
-        .then(({ error: err }: any) => {
-          if (err) console.error('Supabase cancel booking error:', err);
-        });
-    }
-
     return found;
   };
 
@@ -303,19 +193,6 @@ export function useBookingStore() {
         return b;
       })
     );
-
-    if (isSupabaseConfigured) {
-      supabase
-        .from('bookings')
-        .update({
-          cancellation_email_status: status,
-          cancellation_email_error: error || null,
-        })
-        .eq('id', id.trim().toUpperCase())
-        .then(({ error: err }: any) => {
-          if (err) console.error('Supabase cancellation email update error:', err);
-        });
-    }
   };
 
   const isSlotBooked = (activityId: string, dateKey: string, timeSlot: string): boolean => {

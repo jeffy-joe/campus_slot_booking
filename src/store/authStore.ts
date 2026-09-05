@@ -1,25 +1,16 @@
 import { useSyncExternalStore } from 'react';
 import type { User } from '../types';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import {
+  fetchUsersFromDB,
+  saveUserToDB,
+  savePendingVerificationToDB,
+  deletePendingVerificationFromDB,
+} from '../services/dbService';
 
 export interface StoredAccount extends User {
   passwordHash: string;
   isVerified: boolean;
   createdAt: string;
-}
-
-function mapSupabaseRowToStoredAccount(row: any): StoredAccount {
-  return {
-    id: row.id,
-    name: row.name,
-    registrationNumber: row.registration_number,
-    email: row.email,
-    passwordHash: row.password_hash,
-    isAdmin: row.is_admin || false,
-    isVerified: row.is_verified !== false,
-    createdAt: row.created_at || new Date().toISOString(),
-    isGuest: false,
-  };
 }
 
 export interface PendingVerification {
@@ -127,6 +118,16 @@ let globalState: AuthState = {
   rememberMe: loadRememberMe(),
 };
 
+// Sync users from Supabase on init if configured
+fetchUsersFromDB().then(dbUsers => {
+  if (dbUsers && Array.isArray(dbUsers)) {
+    setGlobalState(prev => ({
+      ...prev,
+      users: dbUsers,
+    }));
+  }
+});
+
 const listeners = new Set<() => void>();
 
 function notifyListeners() {
@@ -157,50 +158,6 @@ function setGlobalState(updater: (prev: AuthState) => AuthState) {
   }
 
   notifyListeners();
-}
-
-if (isSupabaseConfigured && typeof window !== 'undefined') {
-  supabase
-    .from('users')
-    .select('*')
-    .then(({ data, error }: any) => {
-      if (!error && data) {
-        const dbUsers = data.map(mapSupabaseRowToStoredAccount);
-        setGlobalState(prev => {
-          const merged = [...dbUsers];
-          prev.users.forEach(u => {
-            if (!merged.some(m => m.email.toLowerCase() === u.email.toLowerCase())) {
-              merged.push(u);
-            }
-          });
-          return { ...prev, users: merged };
-        });
-      }
-    });
-
-  supabase
-    .channel('public:users')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, (payload: any) => {
-      if (payload.eventType === 'INSERT') {
-        const newU = mapSupabaseRowToStoredAccount(payload.new);
-        setGlobalState(prev => ({
-          ...prev,
-          users: [...prev.users.filter(u => u.email.toLowerCase() !== newU.email.toLowerCase()), newU],
-        }));
-      } else if (payload.eventType === 'UPDATE') {
-        const updated = mapSupabaseRowToStoredAccount(payload.new);
-        setGlobalState(prev => ({
-          ...prev,
-          users: prev.users.map(u => (u.id === updated.id ? updated : u)),
-        }));
-      } else if (payload.eventType === 'DELETE') {
-        setGlobalState(prev => ({
-          ...prev,
-          users: prev.users.filter(u => u.id !== payload.old.id),
-        }));
-      }
-    })
-    .subscribe();
 }
 
 function subscribe(listener: () => void) {
@@ -312,10 +269,10 @@ export function useAuthStore() {
     if (!cleanReg) {
       return { success: false, error: 'Please enter your registration number.' };
     }
-    if (!/^\d{8}$/.test(cleanReg)) {
+    if (cleanReg.length !== 8) {
       return {
         success: false,
-        error: 'Registration number must be exactly 8 digits (e.g. 20241042).',
+        error: 'Register number must be exactly 8 characters (e.g. 22BCE104).',
       };
     }
     if (!cleanEmail) {
@@ -331,7 +288,7 @@ export function useAuthStore() {
       };
     }
 
-    // Check if account with same email already exists
+    // Check if account already exists and is verified
     const existing = globalState.users.find(
       u => u.email.trim().toLowerCase() === cleanEmail
     );
@@ -342,29 +299,30 @@ export function useAuthStore() {
       };
     }
 
-    // Enforce: one account holds one register number only
-    const regExists = globalState.users.find(
-      u => u.registrationNumber && u.registrationNumber.trim() === cleanReg
+    // Check if an account with this Register Number already exists
+    const existingReg = globalState.users.find(
+      u =>
+        u.registrationNumber &&
+        u.registrationNumber.trim().toUpperCase() === cleanReg
     );
-    if (regExists) {
+    if (existingReg) {
       return {
         success: false,
-        error: `Registration number "${cleanReg}" is already registered to another account. One account holds one registration number only.`,
+        error: `An account with Register Number "${cleanReg}" already exists.`,
       };
     }
 
-    // Check if another email is actively pending verification with the same registration number
-    const pendingWithSameReg = Object.values(globalState.pendingVerifications).find(
+    // Check if a pending registration with this Register Number is already in progress
+    const pendingReg = Object.values(globalState.pendingVerifications).find(
       p =>
         p.registrationNumber &&
-        p.registrationNumber.trim() === cleanReg &&
-        p.email.toLowerCase() !== cleanEmail &&
-        p.expiresAt > Date.now()
+        p.registrationNumber.trim().toUpperCase() === cleanReg &&
+        p.email !== cleanEmail
     );
-    if (pendingWithSameReg) {
+    if (pendingReg) {
       return {
         success: false,
-        error: `Registration number "${cleanReg}" is currently undergoing verification with another email. One account holds one registration number only.`,
+        error: `An account registration for Register Number "${cleanReg}" is already pending verification.`,
       };
     }
 
@@ -400,20 +358,23 @@ export function useAuthStore() {
       };
     }
 
-    // Save pending verification
+    const pendingData: PendingVerification = {
+      name: cleanName,
+      registrationNumber: cleanReg,
+      email: cleanEmail,
+      passwordHash: cleanPassword,
+      code,
+      expiresAt,
+      sentAt: Date.now(),
+    };
+
+    // Save pending verification locally and to Supabase DB
+    savePendingVerificationToDB(pendingData);
     setGlobalState(prev => ({
       ...prev,
       pendingVerifications: {
         ...prev.pendingVerifications,
-        [cleanEmail]: {
-          name: cleanName,
-          registrationNumber: cleanReg,
-          email: cleanEmail,
-          passwordHash: cleanPassword,
-          code,
-          expiresAt,
-          sentAt: Date.now(),
-        },
+        [cleanEmail]: pendingData,
       },
     }));
 
@@ -450,17 +411,17 @@ export function useAuthStore() {
       };
     }
 
-    // Double-check registration number uniqueness before creating account
-    const regConflict = globalState.users.find(
+    // Check if an account with this Register Number was created in the meantime
+    const existingReg = globalState.users.find(
       u =>
         u.registrationNumber &&
-        u.registrationNumber.trim() === pending.registrationNumber.trim() &&
-        u.email.toLowerCase() !== cleanEmail
+        u.registrationNumber.trim().toUpperCase() ===
+          pending.registrationNumber.trim().toUpperCase()
     );
-    if (regConflict) {
+    if (existingReg) {
       return {
         success: false,
-        error: `Registration number "${pending.registrationNumber}" is already in use by another account. One account holds one registration number only.`,
+        error: `An account with Register Number "${pending.registrationNumber}" already exists.`,
       };
     }
 
@@ -485,6 +446,10 @@ export function useAuthStore() {
       isVerified: true,
     };
 
+    // Save verified user account to Supabase DB and remove pending verification
+    saveUserToDB(newAccount);
+    deletePendingVerificationFromDB(cleanEmail);
+
     // Remove from pending and add to verified users
     setGlobalState(prev => {
       const nextPending = { ...prev.pendingVerifications };
@@ -497,24 +462,6 @@ export function useAuthStore() {
         currentUser: authUser,
       };
     });
-
-    if (isSupabaseConfigured) {
-      supabase
-        .from('users')
-        .upsert({
-          id: newAccount.id,
-          name: newAccount.name,
-          registration_number: newAccount.registrationNumber,
-          email: newAccount.email,
-          password_hash: newAccount.passwordHash,
-          is_admin: false,
-          is_verified: true,
-          created_at: newAccount.createdAt,
-        })
-        .then(({ error }: any) => {
-          if (error) console.error('Supabase user insert error:', error);
-        });
-    }
 
     return { success: true, user: authUser };
   };

@@ -157,23 +157,12 @@ export const AuthView: React.FC<AuthViewProps> = ({
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSignupError('');
-    const cleanReg = signupRegNo.trim();
-    if (!cleanReg) {
-      setSignupError('Please enter your registration number.');
-      setSignupLoading(false);
-      return;
-    }
-
-    if (!/^\d{8}$/.test(cleanReg)) {
-      setSignupError('Registration number must be exactly 8 digits (e.g. 20241042).');
-      setSignupLoading(false);
-      return;
-    }
+    setSignupLoading(true);
 
     try {
       const res = await initiateSignup(
         signupName,
-        cleanReg,
+        signupRegNo,
         signupEmail,
         signupPassword
       );
@@ -574,37 +563,26 @@ export const AuthView: React.FC<AuthViewProps> = ({
 
               {/* Register Number Field */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-slate-700">
-                    Register Number
-                  </label>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    {signupRegNo.length}/8 digits
-                  </span>
-                </div>
+                <label className="block text-xs font-semibold text-slate-700">
+                  Register Number
+                </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <CreditCard className="w-4 h-4" />
                   </div>
                   <input
                     type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]{8}"
-                    maxLength={8}
                     required
+                    maxLength={8}
                     value={signupRegNo}
                     onChange={e => {
-                      const val = e.target.value.replace(/\D/g, '').slice(0, 8);
-                      setSignupRegNo(val);
+                      setSignupRegNo(e.target.value.toUpperCase());
                       setSignupError('');
                     }}
                     placeholder="Enter 8-digit register number"
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-base sm:text-sm font-mono text-slate-900 placeholder-slate-400 placeholder:normal-case focus:outline-hidden focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 shadow-xs transition-all min-h-[44px]"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-base sm:text-sm uppercase font-mono text-slate-900 placeholder-slate-400 placeholder:normal-case focus:outline-hidden focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 shadow-xs transition-all min-h-[44px]"
                   />
                 </div>
-                <p className="text-[11px] text-slate-400">
-                  Must be exactly 8 digits. One account holds one register number only.
-                </p>
               </div>
 
               {/* Email ID Field */}

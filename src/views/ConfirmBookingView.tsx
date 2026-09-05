@@ -68,8 +68,8 @@ export const ConfirmBookingView: React.FC<ConfirmBookingViewProps> = ({
       return;
     }
 
-    if (!/^\d{8}$/.test(cleanReg)) {
-      setError('Registration number must be exactly 8 digits (e.g. 20241042)');
+    if (cleanReg.length !== 8) {
+      setError('Registration number must be exactly 8 characters (e.g. 22BCE104)');
       return;
     }
 
@@ -286,49 +286,26 @@ export const ConfirmBookingView: React.FC<ConfirmBookingViewProps> = ({
 
           {/* Campus Registration Number */}
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold text-slate-700">
-                Campus Registration / Roll Number
-              </label>
-              {currentUser && !currentUser.isGuest && currentUser.registrationNumber ? (
-                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60">
-                  Linked to your account
-                </span>
-              ) : (
-                <span className="text-[11px] font-mono text-slate-400">
-                  {registrationNumber.length}/8 digits
-                </span>
-              )}
-            </div>
+            <label className="block text-xs font-bold text-slate-700">
+              Campus Registration / Roll Number
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <Hash className="w-4 h-4" />
               </div>
               <input
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]{8}"
-                maxLength={8}
                 required
-                readOnly={Boolean(currentUser && !currentUser.isGuest && currentUser.registrationNumber)}
+                maxLength={8}
                 value={registrationNumber}
                 onChange={e => {
-                  if (currentUser && !currentUser.isGuest && currentUser.registrationNumber) return;
-                  const val = e.target.value.replace(/\D/g, '').slice(0, 8);
-                  setRegistrationNumber(val);
+                  setRegistrationNumber(e.target.value.toUpperCase());
                   setError('');
                 }}
-                placeholder="e.g. 20241042 (8 digits)"
-                className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono text-slate-900 placeholder-slate-400 placeholder:normal-case focus:outline-hidden focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-500/20 shadow-xs transition-all ${
-                  currentUser && !currentUser.isGuest && currentUser.registrationNumber ? 'bg-slate-100/80 cursor-not-allowed text-slate-600' : ''
-                }`}
+                placeholder="e.g. 22BCE104"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm uppercase font-mono text-slate-900 placeholder-slate-400 placeholder:normal-case focus:outline-hidden focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-500/20 shadow-xs transition-all"
               />
             </div>
-            <p className="text-[11px] text-slate-400">
-              {currentUser && !currentUser.isGuest && currentUser.registrationNumber
-                ? 'Your registration number is tied to your account.'
-                : 'Must be exactly 8 digits.'}
-            </p>
           </div>
 
           {/* Enter Your Email section */}

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import type { SlotRestriction, Announcement, ActivityCategory } from '../types';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 const RESTRICTIONS_STORAGE_KEY = 'campus_sports_restrictions_v2';
 const ANNOUNCEMENTS_STORAGE_KEY = 'campus_sports_announcements_v2';
@@ -8,35 +7,6 @@ const ANNOUNCEMENTS_STORAGE_KEY = 'campus_sports_announcements_v2';
 export const INITIAL_RESTRICTIONS: SlotRestriction[] = [];
 
 export const INITIAL_ANNOUNCEMENTS: Announcement[] = [];
-
-function mapSupabaseRowToRestriction(row: any): SlotRestriction {
-  return {
-    id: row.id,
-    facilityCategory: row.facility_category,
-    facilityName: row.facility_name,
-    activityId: row.activity_id || undefined,
-    activityName: row.activity_name || undefined,
-    type: row.type || 'slot',
-    dateKey: row.date_key,
-    dateString: row.date_string,
-    timeSlot: row.time_slot,
-    reason: row.reason,
-    description: row.description || undefined,
-    createdAt: row.created_at,
-  };
-}
-
-function mapSupabaseRowToAnnouncement(row: any): Announcement {
-  return {
-    id: row.id,
-    title: row.title,
-    message: row.message,
-    priority: row.priority || 'High',
-    publishDate: row.publish_date,
-    isActive: row.is_active !== false,
-    createdAt: row.created_at,
-  };
-}
 
 function loadRestrictions(): SlotRestriction[] {
   try {
@@ -108,70 +78,6 @@ export function useAdminStore() {
     };
   }, []);
 
-  // Sync with Supabase on mount & real-time updates
-  useEffect(() => {
-    if (!isSupabaseConfigured) return;
-    let isMounted = true;
-
-    // Fetch live restrictions
-    supabase
-      .from('slot_restrictions')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data, error }: any) => {
-        if (!error && data && isMounted) {
-          const mapped = data.map(mapSupabaseRowToRestriction);
-          persistRestrictions(mapped);
-        }
-      });
-
-    // Fetch live announcements
-    supabase
-      .from('announcements')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data, error }: any) => {
-        if (!error && data && isMounted) {
-          const mapped = data.map(mapSupabaseRowToAnnouncement);
-          persistAnnouncements(mapped);
-        }
-      });
-
-    // Subscriptions
-    const channel = supabase
-      .channel('public:admin_store')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'slot_restrictions' }, (payload: any) => {
-        if (!isMounted) return;
-        if (payload.eventType === 'INSERT') {
-          const newR = mapSupabaseRowToRestriction(payload.new);
-          persistRestrictions([newR, ...globalRestrictions.filter(r => r.id !== newR.id)]);
-        } else if (payload.eventType === 'UPDATE') {
-          const updated = mapSupabaseRowToRestriction(payload.new);
-          persistRestrictions(globalRestrictions.map(r => r.id === updated.id ? updated : r));
-        } else if (payload.eventType === 'DELETE') {
-          persistRestrictions(globalRestrictions.filter(r => r.id !== payload.old.id));
-        }
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, (payload: any) => {
-        if (!isMounted) return;
-        if (payload.eventType === 'INSERT') {
-          const newA = mapSupabaseRowToAnnouncement(payload.new);
-          persistAnnouncements([newA, ...globalAnnouncements.filter(a => a.id !== newA.id)]);
-        } else if (payload.eventType === 'UPDATE') {
-          const updated = mapSupabaseRowToAnnouncement(payload.new);
-          persistAnnouncements(globalAnnouncements.map(a => a.id === updated.id ? updated : a));
-        } else if (payload.eventType === 'DELETE') {
-          persistAnnouncements(globalAnnouncements.filter(a => a.id !== payload.old.id));
-        }
-      })
-      .subscribe();
-
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
   const persistRestrictions = (newRestrictions: SlotRestriction[]) => {
     globalRestrictions = newRestrictions;
     try {
@@ -199,26 +105,6 @@ export function useAdminStore() {
       createdAt: new Date().toISOString(),
     };
     persistRestrictions([newRestriction, ...globalRestrictions]);
-
-    if (isSupabaseConfigured) {
-      supabase.from('slot_restrictions').insert({
-        id: newRestriction.id,
-        facility_category: newRestriction.facilityCategory,
-        facility_name: newRestriction.facilityName,
-        activity_id: newRestriction.activityId || null,
-        activity_name: newRestriction.activityName || null,
-        type: newRestriction.type,
-        date_key: newRestriction.dateKey,
-        date_string: newRestriction.dateString,
-        time_slot: newRestriction.timeSlot,
-        reason: newRestriction.reason,
-        description: newRestriction.description || null,
-        created_at: newRestriction.createdAt,
-      }).then(({ error }: any) => {
-        if (error) console.error('Supabase addRestriction error:', error);
-      });
-    }
-
     return newRestriction;
   };
 
@@ -231,59 +117,17 @@ export function useAdminStore() {
       createdAt: now,
     }));
     persistRestrictions([...newRestrictions, ...globalRestrictions]);
-
-    if (isSupabaseConfigured) {
-      const rows = newRestrictions.map(r => ({
-        id: r.id,
-        facility_category: r.facilityCategory,
-        facility_name: r.facilityName,
-        activity_id: r.activityId || null,
-        activity_name: r.activityName || null,
-        type: r.type,
-        date_key: r.dateKey,
-        date_string: r.dateString,
-        time_slot: r.timeSlot,
-        reason: r.reason,
-        description: r.description || null,
-        created_at: r.createdAt,
-      }));
-      supabase.from('slot_restrictions').insert(rows).then(({ error }: any) => {
-        if (error) console.error('Supabase addRestrictions error:', error);
-      });
-    }
-
     return newRestrictions;
   };
 
   const removeRestriction = (id: string) => {
     persistRestrictions(globalRestrictions.filter(r => r.id !== id));
-    if (isSupabaseConfigured) {
-      supabase.from('slot_restrictions').delete().eq('id', id).then(({ error }: any) => {
-        if (error) console.error('Supabase removeRestriction error:', error);
-      });
-    }
   };
 
   const updateRestriction = (id: string, updates: Partial<SlotRestriction>) => {
     persistRestrictions(
       globalRestrictions.map(r => (r.id === id ? { ...r, ...updates } : r))
     );
-    if (isSupabaseConfigured) {
-      const dbUpdates: any = {};
-      if (updates.facilityCategory) dbUpdates.facility_category = updates.facilityCategory;
-      if (updates.facilityName) dbUpdates.facility_name = updates.facilityName;
-      if (updates.activityId !== undefined) dbUpdates.activity_id = updates.activityId;
-      if (updates.activityName !== undefined) dbUpdates.activity_name = updates.activityName;
-      if (updates.type) dbUpdates.type = updates.type;
-      if (updates.dateKey) dbUpdates.date_key = updates.dateKey;
-      if (updates.dateString) dbUpdates.date_string = updates.dateString;
-      if (updates.timeSlot) dbUpdates.time_slot = updates.timeSlot;
-      if (updates.reason) dbUpdates.reason = updates.reason;
-      if (updates.description !== undefined) dbUpdates.description = updates.description;
-      supabase.from('slot_restrictions').update(dbUpdates).eq('id', id).then(({ error }: any) => {
-        if (error) console.error('Supabase updateRestriction error:', error);
-      });
-    }
   };
 
   const addAnnouncement = (params: Omit<Announcement, 'id' | 'createdAt'>): Announcement => {
@@ -293,61 +137,25 @@ export function useAdminStore() {
       createdAt: new Date().toISOString(),
     };
     persistAnnouncements([newAnnouncement, ...globalAnnouncements]);
-
-    if (isSupabaseConfigured) {
-      supabase.from('announcements').insert({
-        id: newAnnouncement.id,
-        title: newAnnouncement.title,
-        message: newAnnouncement.message,
-        priority: newAnnouncement.priority,
-        publish_date: newAnnouncement.publishDate,
-        is_active: newAnnouncement.isActive,
-        created_at: newAnnouncement.createdAt,
-      }).then(({ error }: any) => {
-        if (error) console.error('Supabase addAnnouncement error:', error);
-      });
-    }
-
     return newAnnouncement;
   };
 
   const removeAnnouncement = (id: string) => {
     persistAnnouncements(globalAnnouncements.filter(a => a.id !== id));
-    if (isSupabaseConfigured) {
-      supabase.from('announcements').delete().eq('id', id).then(({ error }: any) => {
-        if (error) console.error('Supabase removeAnnouncement error:', error);
-      });
-    }
   };
 
   const updateAnnouncement = (id: string, updates: Partial<Announcement>) => {
     persistAnnouncements(
       globalAnnouncements.map(a => (a.id === id ? { ...a, ...updates } : a))
     );
-    if (isSupabaseConfigured) {
-      const dbUpdates: any = {};
-      if (updates.title) dbUpdates.title = updates.title;
-      if (updates.message) dbUpdates.message = updates.message;
-      if (updates.priority) dbUpdates.priority = updates.priority;
-      if (updates.publishDate) dbUpdates.publish_date = updates.publishDate;
-      if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
-      supabase.from('announcements').update(dbUpdates).eq('id', id).then(({ error }: any) => {
-        if (error) console.error('Supabase updateAnnouncement error:', error);
-      });
-    }
   };
 
   const toggleAnnouncementActive = (id: string) => {
     const target = globalAnnouncements.find(a => a.id === id);
     const newStatus = target ? !target.isActive : true;
     persistAnnouncements(
-      globalAnnouncements.map(a => (a.id === id ? { ...a, isActive: !a.isActive } : a))
+      globalAnnouncements.map(a => (a.id === id ? { ...a, isActive: newStatus } : a))
     );
-    if (isSupabaseConfigured) {
-      supabase.from('announcements').update({ is_active: newStatus }).eq('id', id).then(({ error }: any) => {
-        if (error) console.error('Supabase toggleAnnouncementActive error:', error);
-      });
-    }
   };
 
   const isSlotRestricted = (

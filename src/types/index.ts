@@ -31,7 +31,7 @@ export interface Booking {
   timeSlot: string;   // e.g. "03:00 PM - 04:00 PM"
   venue: string;      // e.g. "Indoor Sports Room 2"
   userName: string;   // e.g. "Rahul Sharma"
-  registrationNumber: string; // e.g. "20241042" (8 digits)
+  registrationNumber: string; // e.g. "22BCE1042"
   userEmail: string;  // e.g. "yourname@gmail.com"
   userId?: string;    // e.g. "user-17885..."
   bookedAt: string;
