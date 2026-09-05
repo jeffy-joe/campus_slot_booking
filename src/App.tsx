@@ -455,7 +455,7 @@ export function App() {
             <BookingStatusView
               initialSearchId={searchBookingId}
               currentUser={currentUser}
-              userBookings={getUserBookings(currentUser?.email, currentUser?.id)}
+              userBookings={getUserBookings(currentUser?.email, currentUser?.id, currentUser?.registrationNumber)}
               onNavigate={handleNavigate}
               getBookingById={getBookingById}
               cancelBooking={cancelBooking}

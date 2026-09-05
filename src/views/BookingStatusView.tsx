@@ -59,7 +59,7 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
     return null;
   });
   const [notFound, setNotFound] = useState(false);
-  const [filterTab, setFilterTab] = useState<'all' | 'confirmed' | 'cancelled'>('all');
+  const [filterTab, setFilterTab] = useState<'all' | 'confirmed' | 'completed' | 'cancelled'>('all');
   const [notification, setNotification] = useState<{ type: 'info' | 'success' | 'error'; message: string } | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [activeEmailEditorId, setActiveEmailEditorId] = useState<string | null>(null);
@@ -68,7 +68,7 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
   const [bookingIdToCancel, setBookingIdToCancel] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
 
-  // Periodically update clock so ended slots transition out automatically
+  // Periodically update clock
   React.useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -76,18 +76,18 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Filter out ended slots from My Reservations (past days or today after slot end time)
-  const activeUserBookings = userBookings.filter(b => !isBookingEnded(b, currentTime));
-
   // Filter bookings for the logged-in user by tab
-  const filteredUserBookings = activeUserBookings.filter(booking => {
-    if (filterTab === 'confirmed') return booking.status === 'confirmed';
+  const filteredUserBookings = userBookings.filter(booking => {
+    const ended = isBookingEnded(booking, currentTime);
+    if (filterTab === 'confirmed') return booking.status === 'confirmed' && !ended;
+    if (filterTab === 'completed') return booking.status === 'confirmed' && ended;
     if (filterTab === 'cancelled') return booking.status === 'cancelled';
     return true;
   });
 
-  const confirmedCount = activeUserBookings.filter(b => b.status === 'confirmed').length;
-  const cancelledCount = activeUserBookings.filter(b => b.status === 'cancelled').length;
+  const confirmedCount = userBookings.filter(b => b.status === 'confirmed' && !isBookingEnded(b, currentTime)).length;
+  const completedCount = userBookings.filter(b => b.status === 'confirmed' && isBookingEnded(b, currentTime)).length;
+  const cancelledCount = userBookings.filter(b => b.status === 'cancelled').length;
 
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -290,7 +290,7 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
         </form>
 
         {/* Filter Pills for User's Bookings (only for logged-in students, hidden in guest mode) */}
-        {currentUser && !currentUser.isGuest && activeUserBookings.length > 0 && (
+        {currentUser && !currentUser.isGuest && userBookings.length > 0 && (
           <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl border border-slate-200/80 self-stretch sm:self-auto overflow-x-auto">
             <button
               type="button"
@@ -301,7 +301,7 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              All ({activeUserBookings.length})
+              All ({userBookings.length})
             </button>
             <button
               type="button"
@@ -312,7 +312,18 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Confirmed ({confirmedCount})
+              Upcoming ({confirmedCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterTab('completed')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                filterTab === 'completed'
+                  ? 'bg-white text-slate-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Completed ({completedCount})
             </button>
             <button
               type="button"
@@ -480,7 +491,7 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
               </span>
             </h2>
 
-            {activeUserBookings.length > 0 && (
+            {userBookings.length > 0 && (
               <span className="text-xs text-slate-500 hidden sm:inline">
                 Click any slot to manage or resend entry receipt
               </span>
@@ -491,6 +502,7 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
             <div className="space-y-3.5">
               {filteredUserBookings.map(booking => {
                 const isConfirmed = booking.status === 'confirmed';
+                const isEnded = isBookingEnded(booking, currentTime);
                 const isSending = sendingId === booking.id;
                 const isEditingEmail = activeEmailEditorId === booking.id;
                 const isCopied = copiedId === booking.id;
@@ -502,7 +514,11 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
                   >
                     {/* Status Top Strip */}
                     <div className={`absolute top-0 left-0 right-0 h-1.5 ${
-                      isConfirmed ? 'bg-emerald-500' : 'bg-rose-400'
+                      booking.status === 'cancelled'
+                        ? 'bg-rose-400'
+                        : isEnded
+                        ? 'bg-slate-400'
+                        : 'bg-emerald-500'
                     }`} />
 
                     {/* Top Row: Activity & Reference & Status */}
@@ -543,20 +559,22 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
                           </button>
                         </div>
 
-                        <span
-                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold capitalize ${
-                            isConfirmed
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200'
-                          }`}
-                        >
-                          {isConfirmed ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          ) : (
+                        {booking.status === 'cancelled' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold capitalize bg-rose-50 text-rose-700 border border-rose-200">
                             <XCircle className="w-3.5 h-3.5 text-rose-500" />
-                          )}
-                          <span>{booking.status}</span>
-                        </span>
+                            <span>Cancelled</span>
+                          </span>
+                        ) : isEnded ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold capitalize bg-slate-100 text-slate-700 border border-slate-200">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Completed</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold capitalize bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Confirmed</span>
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -661,7 +679,7 @@ export const BookingStatusView: React.FC<BookingStatusViewProps> = ({
                         </button>
 
                         {/* Cancel Booking */}
-                        {isConfirmed && (
+                        {isConfirmed && !isEnded && (
                           <button
                             type="button"
                             onClick={() => handleCancelBooking(booking.id)}

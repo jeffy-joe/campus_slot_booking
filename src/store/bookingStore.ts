@@ -221,13 +221,15 @@ export function useBookingStore() {
     return bookings.filter(b => b.userEmail.toLowerCase() === cleanEmail);
   };
 
-  const getUserBookings = (userEmail?: string, userId?: string): Booking[] => {
-    if (!userEmail && !userId) return [];
+  const getUserBookings = (userEmail?: string, userId?: string, registrationNumber?: string): Booking[] => {
+    if (!userEmail && !userId && !registrationNumber) return [];
     const cleanEmail = userEmail?.trim().toLowerCase();
+    const cleanReg = registrationNumber?.trim().toUpperCase();
     return bookings
       .filter(b => {
         if (userId && b.userId && b.userId === userId) return true;
         if (cleanEmail && b.userEmail && b.userEmail.trim().toLowerCase() === cleanEmail) return true;
+        if (cleanReg && b.registrationNumber && b.registrationNumber.trim().toUpperCase() === cleanReg) return true;
         return false;
       })
       .sort((a, b) => new Date(b.bookedAt).getTime() - new Date(a.bookedAt).getTime());
