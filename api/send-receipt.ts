@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const smtpPass = process.env.SMTP_PASS;
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
-    const from = process.env.SMTP_FROM || (smtpUser ? `"Campus Sports Booking" <${smtpUser}>` : '"Campus Sports Booking" <no-reply@campus-sports.edu>');
+    const from = process.env.SMTP_FROM || (smtpUser ? `"BookMyslot" <${smtpUser}>` : '"BookMyslot" <no-reply@campus-sports.edu>');
 
     if (smtpUser && smtpPass) {
       try {
@@ -56,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 <body style="font-family:sans-serif;background-color:#f1f5f9;margin:0;padding:20px;color:#1e293b;">
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
     <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#ffffff;padding:32px 24px;text-align:center;">
-      <h1 style="margin:0;font-size:24px;">Campus Sports Slot Confirmed</h1>
+      <h1 style="margin:0;font-size:24px;">BookMyslot Confirmed</h1>
       <p style="margin:8px 0 0;font-size:14px;opacity:0.9;">Official Digital Pass & Entry Receipt</p>
     </div>
     <div style="padding:28px 24px;">

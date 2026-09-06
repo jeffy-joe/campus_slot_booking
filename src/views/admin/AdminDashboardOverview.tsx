@@ -70,7 +70,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({
           Admin Dashboard
         </h1>
         <p className="text-slate-500 text-xs sm:text-sm mt-1">
-          Manage campus sports bookings, restrictions and announcements.
+          Manage BookMyslot bookings, restrictions and announcements.
         </p>
       </div>
 

@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const smtpPass = process.env.SMTP_PASS;
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
-    const from = process.env.SMTP_FROM || (smtpUser ? `"Campus Sports Booking" <${smtpUser}>` : '"Campus Sports Booking" <no-reply@campus-sports.edu>');
+    const from = process.env.SMTP_FROM || (smtpUser ? `"BookMyslot" <${smtpUser}>` : '"BookMyslot" <no-reply@campus-sports.edu>');
 
     if (smtpUser && smtpPass) {
       try {
@@ -53,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           from,
           to: body.userEmail,
           subject: `Slot Booking Cancelled: ${body.activityName} (${body.dateString}, ${body.timeSlot}) - Ref #${body.bookingId}`,
-          text: `Notice: Your Campus Sports Slot Reservation has been Cancelled.\n\nBooking ID: ${body.bookingId}\nStudent: ${body.userName}\nSport: ${body.activityName}\nDate: ${body.dateString}\nTime: ${body.timeSlot}`,
+          text: `Notice: Your BookMyslot Reservation has been Cancelled.\n\nBooking ID: ${body.bookingId}\nStudent: ${body.userName}\nSport: ${body.activityName}\nDate: ${body.dateString}\nTime: ${body.timeSlot}`,
         });
 
         return res.status(200).json({

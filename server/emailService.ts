@@ -65,7 +65,7 @@ export function generateReceiptHtml(data: EmailReceiptPayload): string {
 <body>
   <div class="container">
     <div class="header">
-      <h1>Campus Sports Slot Confirmed</h1>
+      <h1>BookMyslot Confirmed</h1>
       <p>Official Digital Pass & Entry Receipt</p>
     </div>
 
@@ -124,7 +124,7 @@ export function generateReceiptHtml(data: EmailReceiptPayload): string {
     </div>
 
     <div class="footer">
-      Dispatched via SMTP by Campus Sports Booking Portal.<br>
+      Dispatched via SMTP by BookMyslot Portal.<br>
       For cancellations or assistance, visit the Campus Booking Status portal.
     </div>
   </div>
@@ -184,7 +184,7 @@ export async function verifySMTPConnection(): Promise<SmtpStatusResult> {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
   const user = process.env.SMTP_USER;
-  const from = process.env.SMTP_FROM || (user ? `"Campus Sports Booking" <${user}>` : undefined);
+  const from = process.env.SMTP_FROM || (user ? `"BookMyslot" <${user}>` : undefined);
 
   const { transporter, isConfigured } = createConfiguredTransporter();
 
@@ -228,7 +228,7 @@ export async function sendEmailReceiptViaSMTP(data: EmailReceiptPayload): Promis
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
   const user = process.env.SMTP_USER;
-  const from = process.env.SMTP_FROM || (user ? `"Campus Sports Booking" <${user}>` : '"Campus Sports Booking" <no-reply@campus-sports.edu>');
+  const from = process.env.SMTP_FROM || (user ? `"BookMyslot" <${user}>` : '"BookMyslot" <no-reply@campus-sports.edu>');
 
   try {
     const configured = createConfiguredTransporter();
@@ -314,13 +314,13 @@ export function generateVerificationHtml(data: VerificationEmailPayload): string
 <body>
   <div class="card">
     <div class="header">
-      <h1>Campus Sports Booking</h1>
+      <h1>BookMyslot</h1>
       <p>Account Email Verification</p>
     </div>
     <div class="content">
       <div class="greeting">
         Hello <strong>${data.userName || 'Student'}</strong>,<br><br>
-        Thank you for creating an account on Campus Sports Booking. Please enter the 6-digit verification code below to activate your account and access sports slot bookings:
+        Thank you for creating an account on BookMyslot. Please enter the 6-digit verification code below to activate your account and access sports slot bookings:
       </div>
       
       <div class="code-container">
@@ -334,7 +334,7 @@ export function generateVerificationHtml(data: VerificationEmailPayload): string
       </div>
     </div>
     <div class="footer">
-      Campus Recreation &amp; Sports Booking Portal &bull; Automated Verification System
+      BookMyslot Portal &bull; Automated Verification System
     </div>
   </div>
 </body>
@@ -344,7 +344,7 @@ export function generateVerificationHtml(data: VerificationEmailPayload): string
 
 export async function sendVerificationEmail(data: VerificationEmailPayload): Promise<VerificationEmailResult> {
   const user = process.env.SMTP_USER;
-  const from = process.env.SMTP_FROM || (user ? `"Campus Sports Booking" <${user}>` : '"Campus Sports Booking" <no-reply@campus-sports.edu>');
+  const from = process.env.SMTP_FROM || (user ? `"BookMyslot" <${user}>` : '"BookMyslot" <no-reply@campus-sports.edu>');
 
   try {
     const configured = createConfiguredTransporter();
@@ -354,9 +354,9 @@ export async function sendVerificationEmail(data: VerificationEmailPayload): Pro
       const info = await configured.transporter.sendMail({
         from,
         to: data.email,
-        subject: `Your Campus Sports Verification Code: ${data.code}`,
+        subject: `Your BookMyslot Verification Code: ${data.code}`,
         html,
-        text: `Hello ${data.userName || 'Student'},\n\nYour Campus Sports Booking verification code is: ${data.code}\n\nThis code will expire in 10 minutes.\nIf you did not request this, please ignore this email.`,
+        text: `Hello ${data.userName || 'Student'},\n\nYour BookMyslot verification code is: ${data.code}\n\nThis code will expire in 10 minutes.\nIf you did not request this, please ignore this email.`,
       });
 
       console.log(`[SMTP] Verification email dispatched to ${data.email}, message ID: ${info.messageId}`);
@@ -493,13 +493,13 @@ export function generateCancellationHtml(data: EmailCancellationPayload): string
 
       <div class="notice-card">
         <strong>Need to rebook?</strong><br>
-        We apologize for any inconvenience caused by this cancellation. You may log into the <strong>Campus Sports Portal</strong> at any time to select and reserve another available slot.
+        We apologize for any inconvenience caused by this cancellation. You may log into <strong>BookMyslot</strong> at any time to select and reserve another available slot.
       </div>
     </div>
 
     <div class="footer">
-      Dispatched via Campus Sports Booking Portal Notification System.<br>
-      Campus Sports &amp; Recreation Office &bull; Student Services
+      Dispatched via BookMyslot Notification System.<br>
+      BookMyslot &bull; Student Services
     </div>
   </div>
 </body>
@@ -510,7 +510,7 @@ export function generateCancellationHtml(data: EmailCancellationPayload): string
 // SMTP Transporter setup and send cancellation email
 export async function sendCancellationEmailViaSMTP(data: EmailCancellationPayload): Promise<SendReceiptResult> {
   const user = process.env.SMTP_USER;
-  const from = process.env.SMTP_FROM || (user ? `"Campus Sports Booking" <${user}>` : '"Campus Sports Booking" <no-reply@campus-sports.edu>');
+  const from = process.env.SMTP_FROM || (user ? `"BookMyslot" <${user}>` : '"BookMyslot" <no-reply@campus-sports.edu>');
 
   try {
     const configured = createConfiguredTransporter();
@@ -522,7 +522,7 @@ export async function sendCancellationEmailViaSMTP(data: EmailCancellationPayloa
         to: data.userEmail,
         subject: `Slot Booking Cancelled: ${data.activityName} (${data.dateString}, ${data.timeSlot}) - Ref #${data.bookingId}`,
         html: htmlContent,
-        text: `Notice: Your Campus Sports Slot Reservation has been Cancelled.\n\nBooking ID: ${data.bookingId}\nStudent: ${data.userName} (${data.registrationNumber})\nSport: ${data.activityName}\nVenue: ${data.venue || 'Campus Arena'}\nDate: ${data.dateString}\nTime: ${data.timeSlot}\n\nPlease visit the Campus Sports Portal to select another available slot.\nDispatched from: ${from}`,
+        text: `Notice: Your BookMyslot Reservation has been Cancelled.\n\nBooking ID: ${data.bookingId}\nStudent: ${data.userName} (${data.registrationNumber})\nSport: ${data.activityName}\nVenue: ${data.venue || 'Campus Arena'}\nDate: ${data.dateString}\nTime: ${data.timeSlot}\n\nPlease visit BookMyslot to select another available slot.\nDispatched from: ${from}`,
       });
 
       console.log(`[SMTP] Cancellation notice sent successfully! ID: ${info.messageId}`);

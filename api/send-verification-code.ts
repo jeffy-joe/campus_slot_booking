@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const smtpPass = process.env.SMTP_PASS;
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
-    const from = process.env.SMTP_FROM || (smtpUser ? `"Campus Sports Booking" <${smtpUser}>` : '"Campus Sports Booking" <no-reply@campus-sports.edu>');
+    const from = process.env.SMTP_FROM || (smtpUser ? `"BookMyslot" <${smtpUser}>` : '"BookMyslot" <no-reply@bookmyslot.app>');
 
     if (smtpUser && smtpPass) {
       try {
@@ -61,11 +61,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#f8fafc;margin:0;padding:24px;color:#1e293b;">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:20px;overflow:hidden;border:1px solid #e2e8f0;">
     <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#ffffff;padding:36px 24px;text-align:center;">
-      <h1 style="margin:0;font-size:24px;font-weight:800;">Campus Sports Booking</h1>
+      <h1 style="margin:0;font-size:24px;font-weight:800;">BookMyslot</h1>
       <p style="margin:8px 0 0;font-size:13px;opacity:0.9;">Account Email Verification</p>
     </div>
     <div style="padding:32px 28px;text-align:center;">
-      <p style="font-size:15px;color:#334155;text-align:left;">Hello <strong>${userName}</strong>,<br><br>Thank you for creating an account on Campus Sports Booking. Please enter the 6-digit verification code below to activate your account:</p>
+      <p style="font-size:15px;color:#334155;text-align:left;">Hello <strong>${userName}</strong>,<br><br>Thank you for creating an account on BookMyslot. Please enter the 6-digit verification code below to activate your account:</p>
       <div style="background:#eff6ff;border:2px dashed #93c5fd;border-radius:16px;padding:24px 16px;margin:28px 0;">
         <div style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Your Verification Code</div>
         <div style="font-family:monospace;font-size:38px;font-weight:800;letter-spacing:10px;color:#1d4ed8;">${code}</div>
@@ -79,9 +79,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const info = await transporter.sendMail({
           from,
           to: email,
-          subject: `Your Campus Sports Verification Code: ${code}`,
+          subject: `Your BookMyslot Verification Code: ${code}`,
           html: htmlContent,
-          text: `Hello ${userName},\n\nYour Campus Sports Booking verification code is: ${code}\n\nValid for 10 minutes.`,
+          text: `Hello ${userName},\n\nYour BookMyslot verification code is: ${code}\n\nValid for 10 minutes.`,
         });
 
         return res.status(200).json({

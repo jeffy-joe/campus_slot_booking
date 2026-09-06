@@ -266,11 +266,8 @@ export const AuthView: React.FC<AuthViewProps> = ({
               <div className="flex items-center gap-2.5">
                 <LogoIcon className="w-9 h-9 drop-shadow-sm flex-shrink-0" />
                 <div className="leading-tight text-left">
-                  <span className="block font-bold text-slate-900 text-base tracking-tight">
-                    Campus
-                  </span>
-                  <span className="block font-semibold text-blue-600 text-xs">
-                    Sports Booking
+                  <span className="block font-black text-slate-900 text-lg tracking-tight">
+                    Book<span className="text-blue-600">Myslot</span>
                   </span>
                 </div>
               </div>
@@ -286,11 +283,8 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 <div className="flex items-center gap-3">
                   <LogoIcon className="w-10 h-10 drop-shadow-sm flex-shrink-0" />
                   <div className="leading-tight">
-                    <span className="block font-bold text-slate-900 text-lg tracking-tight">
-                      Campus
-                    </span>
-                    <span className="block font-semibold text-blue-600 text-xs">
-                      Sports Booking
+                    <span className="block font-black text-slate-900 text-xl tracking-tight">
+                      Book<span className="text-blue-600">Myslot</span>
                     </span>
                   </div>
                 </div>
@@ -298,8 +292,8 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 {/* Main Heading & Subtitle */}
                 <div className="space-y-2.5">
                   <h1 className="text-3xl sm:text-4xl xl:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                    Welcome to Campus <br />
-                    Sports Booking
+                    Welcome to <br />
+                    Book<span className="text-blue-600">Myslot</span>
                   </h1>
                   <p className="text-slate-500 text-sm sm:text-base leading-relaxed max-w-md">
                     Book indoor games and outdoor grounds easily and play without hassle.
@@ -505,11 +499,8 @@ export const AuthView: React.FC<AuthViewProps> = ({
               <div className="flex items-center gap-2.5">
                 <LogoIcon className="w-8 h-8 flex-shrink-0" />
                 <div className="leading-tight">
-                  <span className="block font-bold text-slate-900 text-sm tracking-tight">
-                    Campus
-                  </span>
-                  <span className="block font-semibold text-blue-600 text-[11px]">
-                    Sports Booking
+                  <span className="block font-black text-slate-900 text-base tracking-tight">
+                    Book<span className="text-blue-600">Myslot</span>
                   </span>
                 </div>
               </div>
@@ -533,7 +524,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 Create Your Account
               </h2>
               <p className="text-slate-500 text-xs sm:text-sm">
-                Join Campus Sports Booking to book your favorite slots
+                Join BookMyslot to book your favorite slots
               </p>
             </div>
 
@@ -707,11 +698,8 @@ export const AuthView: React.FC<AuthViewProps> = ({
               <div className="flex items-center gap-2.5">
                 <LogoIcon className="w-8 h-8 flex-shrink-0" />
                 <div className="leading-tight">
-                  <span className="block font-bold text-slate-900 text-sm tracking-tight">
-                    Campus
-                  </span>
-                  <span className="block font-semibold text-blue-600 text-[11px]">
-                    Sports Booking
+                  <span className="block font-black text-slate-900 text-base tracking-tight">
+                    Book<span className="text-blue-600">Myslot</span>
                   </span>
                 </div>
               </div>

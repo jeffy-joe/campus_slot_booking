@@ -79,8 +79,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <LogoIcon className="w-8 h-8 flex-shrink-0 drop-shadow-sm" />
           <div className="leading-tight">
-            <span className="block font-bold text-slate-900 text-sm tracking-tight">Campus</span>
-            <span className="block font-medium text-slate-500 text-xs">Sports Booking</span>
+            <span className="block font-black text-slate-900 text-base tracking-tight">
+              Book<span className="text-blue-600">Myslot</span>
+            </span>
           </div>
         </button>
 
