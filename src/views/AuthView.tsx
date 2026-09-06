@@ -265,9 +265,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
             <div className="lg:hidden flex flex-col items-center text-center mb-6 space-y-2">
               <div className="flex items-center gap-2.5">
                 <LogoIcon className="w-9 h-9 drop-shadow-sm flex-shrink-0" />
-                <div className="leading-none text-left">
-                  <span className="block font-extrabold text-slate-900 text-sm tracking-tight">Book</span>
-                  <span className="block font-bold text-blue-600 text-xs tracking-wide mt-0.5">Myslot</span>
+                <div className="leading-tight text-left">
+                  <span className="block font-black text-slate-900 text-lg tracking-tight">
+                    Book<span className="text-blue-600">Myslot</span>
+                  </span>
+                  <span className="block font-medium text-slate-400 text-xs">
+                    Sports Booking
+                  </span>
                 </div>
               </div>
               <p className="text-slate-500 text-xs max-w-xs">
@@ -281,9 +285,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 {/* Brand Logo Header */}
                 <div className="flex items-center gap-3">
                   <LogoIcon className="w-10 h-10 drop-shadow-sm flex-shrink-0" />
-                  <div className="leading-none">
-                    <span className="block font-extrabold text-slate-900 text-base tracking-tight">Book</span>
-                    <span className="block font-bold text-blue-600 text-xs tracking-wide mt-0.5">Myslot</span>
+                  <div className="leading-tight">
+                    <span className="block font-black text-slate-900 text-xl tracking-tight">
+                      Book<span className="text-blue-600">Myslot</span>
+                    </span>
+                    <span className="block font-medium text-slate-400 text-xs">
+                      Sports Booking
+                    </span>
                   </div>
                 </div>
 
@@ -496,9 +504,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
             <div className="flex items-center justify-between pb-5 sm:pb-6 mb-5 sm:mb-6 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <LogoIcon className="w-8 h-8 flex-shrink-0" />
-                <div className="leading-none">
-                  <span className="block font-extrabold text-slate-900 text-sm tracking-tight">Book</span>
-                  <span className="block font-bold text-blue-600 text-xs tracking-wide mt-0.5">Myslot</span>
+                <div className="leading-tight">
+                  <span className="block font-black text-slate-900 text-base tracking-tight">
+                    Book<span className="text-blue-600">Myslot</span>
+                  </span>
+                  <span className="block font-medium text-slate-400 text-xs">
+                    Sports Booking
+                  </span>
                 </div>
               </div>
 
@@ -694,9 +706,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
             <div className="flex items-center justify-between pb-5 sm:pb-6 mb-5 sm:mb-6 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <LogoIcon className="w-8 h-8 flex-shrink-0" />
-                <div className="leading-none">
-                  <span className="block font-extrabold text-slate-900 text-sm tracking-tight">Book</span>
-                  <span className="block font-bold text-blue-600 text-xs tracking-wide mt-0.5">Myslot</span>
+                <div className="leading-tight">
+                  <span className="block font-black text-slate-900 text-base tracking-tight">
+                    Book<span className="text-blue-600">Myslot</span>
+                  </span>
+                  <span className="block font-medium text-slate-400 text-xs">
+                    Sports Booking
+                  </span>
                 </div>
               </div>
 

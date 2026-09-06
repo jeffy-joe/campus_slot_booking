@@ -60,9 +60,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           className="flex items-center gap-3 text-left group transition-transform active:scale-95 cursor-pointer"
         >
           <LogoIcon className="w-8 h-8 flex-shrink-0 drop-shadow-xs" />
-          <div className="leading-none">
-            <span className="block font-extrabold text-slate-900 text-sm tracking-tight">Book</span>
-            <span className="block font-bold text-blue-600 text-xs tracking-wide mt-0.5">Myslot</span>
+          <div className="leading-tight">
+            <span className="block font-black text-slate-900 text-base tracking-tight">
+              Book<span className="text-blue-600">Myslot</span>
+            </span>
+            <span className="block font-medium text-slate-400 text-xs">
+              Sports Booking
+            </span>
           </div>
         </button>
 
