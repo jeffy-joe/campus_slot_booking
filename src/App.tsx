@@ -64,10 +64,9 @@ function resolveInitialView(user: User | null): ViewType {
       if (rawHash === 'admin' && !isAdmin) {
         return 'dashboard';
       }
-      if (['login', 'signup', 'verify'].includes(rawHash)) {
-        return 'dashboard';
+      if (!['login', 'signup', 'verify'].includes(rawHash)) {
+        return rawHash as ViewType;
       }
-      return rawHash as ViewType;
     }
   }
 
@@ -355,17 +354,41 @@ export function App() {
             }
             handleNavigate('admin');
           } else {
+            const savedView = (typeof localStorage !== 'undefined'
+              ? localStorage.getItem(VIEW_STORAGE_KEY)
+              : null) as ViewType;
+            const targetView =
+              savedView &&
+              savedView !== 'login' &&
+              savedView !== 'signup' &&
+              savedView !== 'verify' &&
+              savedView !== 'admin'
+                ? savedView
+                : 'dashboard';
+
             if (typeof window !== 'undefined') {
-              window.history.replaceState(null, '', '#dashboard');
+              window.history.replaceState(null, '', '#' + targetView);
             }
-            handleNavigate('dashboard');
+            handleNavigate(targetView);
           }
         }}
         onContinueGuest={() => {
+          const savedView = (typeof localStorage !== 'undefined'
+            ? localStorage.getItem(VIEW_STORAGE_KEY)
+            : null) as ViewType;
+          const targetView =
+            savedView &&
+            savedView !== 'login' &&
+            savedView !== 'signup' &&
+            savedView !== 'verify' &&
+            savedView !== 'admin'
+              ? savedView
+              : 'dashboard';
+
           if (typeof window !== 'undefined') {
-            window.history.replaceState(null, '', '#dashboard');
+            window.history.replaceState(null, '', '#' + targetView);
           }
-          handleNavigate('dashboard');
+          handleNavigate(targetView);
         }}
         onNavigateMode={mode => handleNavigate(mode)}
       />
