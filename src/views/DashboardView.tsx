@@ -136,8 +136,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Hero Sports Vector Art */}
-          <div className="flex-shrink-0">
+          {/* Hero Sports Vector Art (Hidden on mobile screens) */}
+          <div className="hidden md:block flex-shrink-0">
             <HeroIllustration className="w-64 h-48 sm:w-72 sm:h-52" />
           </div>
         </div>
