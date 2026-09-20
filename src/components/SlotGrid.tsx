@@ -25,18 +25,18 @@ export const SlotGrid: React.FC<SlotGridProps> = ({
 }) => {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Available Slots - {dateTitle}
           </h3>
           {isToday && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100/90 whitespace-nowrap">
               Upcoming Timings Only
             </span>
           )}
         </div>
-        <span className="text-xs text-slate-400">1-hour sessions</span>
+        <span className="text-xs text-slate-400 font-medium whitespace-nowrap">1-hour sessions</span>
       </div>
 
       {slots.length === 0 ? (
