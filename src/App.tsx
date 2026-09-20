@@ -64,9 +64,10 @@ function resolveInitialView(user: User | null): ViewType {
       if (rawHash === 'admin' && !isAdmin) {
         return 'dashboard';
       }
-      if (!['login', 'signup', 'verify'].includes(rawHash)) {
-        return rawHash as ViewType;
+      if (['login', 'signup', 'verify'].includes(rawHash)) {
+        return 'dashboard';
       }
+      return rawHash as ViewType;
     }
   }
 
@@ -365,7 +366,6 @@ export function App() {
               savedView !== 'admin'
                 ? savedView
                 : 'dashboard';
-
             if (typeof window !== 'undefined') {
               window.history.replaceState(null, '', '#' + targetView);
             }
@@ -384,7 +384,6 @@ export function App() {
             savedView !== 'admin'
               ? savedView
               : 'dashboard';
-
           if (typeof window !== 'undefined') {
             window.history.replaceState(null, '', '#' + targetView);
           }
