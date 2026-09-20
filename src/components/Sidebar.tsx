@@ -213,7 +213,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-1.5 py-1.5 flex items-center justify-around">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] px-2 py-2 flex items-center justify-around select-none">
         {navItems.map(item => {
           const Icon = item.icon;
           const active = isItemActive(item.views) || currentView === item.id;
@@ -235,21 +235,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onNavigate(item.id);
                 onCloseMobile();
               }}
-              className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
-                active
-                  ? 'text-blue-600 font-bold bg-blue-50/80'
-                  : 'text-slate-500 font-medium hover:text-slate-900 hover:bg-slate-50'
-              }`}
+              className="flex-1 flex flex-col items-center justify-center py-1 transition-transform active:scale-95 cursor-pointer group"
             >
-              <div className="relative">
-                <Icon className={`w-5 h-5 ${active ? 'text-blue-600' : 'text-slate-500'}`} />
+              <div
+                className={`relative px-3.5 py-1 rounded-full transition-all duration-200 flex items-center justify-center ${
+                  active
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 scale-105'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Icon className="w-5.5 h-5.5" />
                 {item.badge !== undefined && (
-                  <span className="absolute -top-1 -right-2.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center border-2 border-white">
+                  <span className="absolute -top-1 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white">
                     {item.badge}
                   </span>
                 )}
               </div>
-              <span className="text-[10px] tracking-tight mt-1 truncate max-w-full">
+              <span
+                className={`text-[11px] tracking-tight mt-1 transition-colors ${
+                  active ? 'font-bold text-blue-600' : 'font-semibold text-slate-500'
+                }`}
+              >
                 {shortLabel}
               </span>
             </button>

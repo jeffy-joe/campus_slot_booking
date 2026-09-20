@@ -151,7 +151,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       </div>
 
       {/* Admin Mobile Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-1.5 py-1.5 flex items-center justify-around">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] px-2 py-2 flex items-center justify-around select-none">
         {navItems.map(item => {
           const active = activeTab === item.id;
           const shortLabel =
@@ -168,16 +168,24 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 onSelectTab(item.id);
                 onCloseMobile();
               }}
-              className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer ${
-                active
-                  ? 'text-blue-600 font-bold bg-blue-50/80'
-                  : 'text-slate-500 font-medium hover:text-slate-900 hover:bg-slate-50'
-              }`}
+              className="flex-1 flex flex-col items-center justify-center py-1 transition-transform active:scale-95 cursor-pointer group"
             >
-              <div className={active ? 'text-blue-600' : 'text-slate-500'}>
-                {item.icon}
+              <div
+                className={`px-3.5 py-1 rounded-full transition-all duration-200 flex items-center justify-center ${
+                  active
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 scale-105'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <div className="w-5.5 h-5.5 flex items-center justify-center [&_svg]:w-5.5 [&_svg]:h-5.5">
+                  {item.icon}
+                </div>
               </div>
-              <span className="text-[10px] tracking-tight mt-1 truncate max-w-full">
+              <span
+                className={`text-[11px] tracking-tight mt-1 transition-colors ${
+                  active ? 'font-bold text-blue-600' : 'font-semibold text-slate-500'
+                }`}
+              >
                 {shortLabel}
               </span>
             </button>

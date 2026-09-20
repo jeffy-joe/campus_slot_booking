@@ -394,7 +394,7 @@ export function App() {
         />
 
         {/* View Switcher with responsive container padding */}
-        <main className="flex-1 p-3.5 sm:p-6 md:p-8 max-w-7xl mx-auto w-full pb-20 md:pb-8">
+        <main className="flex-1 p-3.5 sm:p-6 md:p-8 max-w-7xl mx-auto w-full pb-24 md:pb-8">
           {currentView === 'dashboard' && (
             <DashboardView
               onNavigate={handleNavigate}
