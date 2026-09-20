@@ -211,6 +211,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         {content}
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-1.5 py-1.5 flex items-center justify-around">
+        {navItems.map(item => {
+          const Icon = item.icon;
+          const active = isItemActive(item.views) || currentView === item.id;
+          const shortLabel =
+            item.id === 'indoor-games'
+              ? 'Indoor'
+              : item.id === 'turf-grounds'
+              ? 'Turf'
+              : item.id === 'booking-status'
+              ? 'Status'
+              : item.id === 'announcements'
+              ? 'Notices'
+              : 'Dashboard';
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => {
+                onNavigate(item.id);
+                onCloseMobile();
+              }}
+              className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer relative ${
+                active
+                  ? 'text-blue-600 font-bold bg-blue-50/80'
+                  : 'text-slate-500 font-medium hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <div className="relative">
+                <Icon className={`w-5 h-5 ${active ? 'text-blue-600' : 'text-slate-500'}`} />
+                {item.badge !== undefined && (
+                  <span className="absolute -top-1 -right-2.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center border-2 border-white">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] tracking-tight mt-1 truncate max-w-full">
+                {shortLabel}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
     </>
   );
 };
