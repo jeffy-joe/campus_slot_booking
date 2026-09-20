@@ -92,20 +92,7 @@ function loadCurrentUser(): User | null {
   } catch (e) {
     console.error('Failed to parse current user', e);
   }
-
-  // Auto-initialize persistent Guest user so app opens directly without login block
-  const defaultGuest: User = {
-    id: 'guest_default',
-    name: 'Guest User',
-    email: '',
-    registrationNumber: '',
-    isGuest: true,
-    isVerified: true,
-  };
-  try {
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(defaultGuest));
-  } catch {}
-  return defaultGuest;
+  return null;
 }
 
 function loadRememberMe(): boolean {
@@ -589,17 +576,9 @@ export function useAuthStore() {
   };
 
   const logout = () => {
-    const guestUser: User = {
-      id: `guest_${Date.now()}`,
-      name: 'Guest User',
-      email: '',
-      registrationNumber: '',
-      isGuest: true,
-      isVerified: true,
-    };
     setGlobalState(prev => ({
       ...prev,
-      currentUser: guestUser,
+      currentUser: null,
     }));
   };
 

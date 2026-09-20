@@ -43,7 +43,12 @@ const SEARCH_ID_STORAGE_KEY = 'campus_sports_active_search_id_v3';
 const CONFIRMED_BOOKING_KEY = 'campus_sports_confirmed_booking_v3';
 
 function resolveInitialView(user: User | null): ViewType {
+  const hasUser = Boolean(user);
   const isAdmin = user?.isAdmin || user?.email === 'admin@campus.com';
+
+  if (!hasUser) {
+    return 'login';
+  }
 
   if (isAdmin) {
     return 'admin';
@@ -57,6 +62,9 @@ function resolveInitialView(user: User | null): ViewType {
     }
     if (VALID_VIEWS.includes(rawHash as ViewType)) {
       if (rawHash === 'admin' && !isAdmin) {
+        return 'dashboard';
+      }
+      if (['login', 'signup', 'verify'].includes(rawHash)) {
         return 'dashboard';
       }
       return rawHash as ViewType;
@@ -78,7 +86,7 @@ function resolveInitialView(user: User | null): ViewType {
     console.error('Failed to restore view from storage', e);
   }
 
-  // 3. Default fallback
+  // 3. Default fallback for logged in user
   return 'dashboard';
 }
 
@@ -256,6 +264,13 @@ export function App() {
       if (VALID_VIEWS.includes(rawHash as ViewType)) {
         if (!currentUser && !['login', 'signup', 'verify'].includes(rawHash)) {
           setCurrentView('login');
+        } else if (currentUser && ['login', 'signup', 'verify'].includes(rawHash)) {
+          // User is authenticated! Prevent Back button from opening login page again.
+          const target = currentView && !['login', 'signup', 'verify'].includes(currentView) ? currentView : 'dashboard';
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', '#' + target);
+          }
+          setCurrentView(target);
         } else {
           setCurrentView(rawHash as ViewType);
         }
@@ -264,7 +279,7 @@ export function App() {
 
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [currentUser]);
+  }, [currentUser, currentView]);
 
   const handleSignOut = () => {
     logout();
@@ -317,8 +332,9 @@ export function App() {
     handleNavigate('booking-status');
   };
 
-  // Render standalone AuthView when user is explicitly in login/signup/verify mode
+  // Render standalone AuthView when user is unauthenticated OR explicitly in login/signup/verify mode
   if (
+    !currentUser ||
     currentView === 'login' ||
     currentView === 'signup' ||
     currentView === 'verify'
@@ -334,35 +350,22 @@ export function App() {
           const user = authenticatedUser || currentUser;
           const isAdmin = user?.isAdmin || user?.email === 'admin@campus.com';
           if (isAdmin) {
+            if (typeof window !== 'undefined') {
+              window.history.replaceState(null, '', '#admin');
+            }
             handleNavigate('admin');
           } else {
-            const savedView = (typeof localStorage !== 'undefined'
-              ? localStorage.getItem(VIEW_STORAGE_KEY)
-              : null) as ViewType;
-            const targetView =
-              savedView &&
-              savedView !== 'login' &&
-              savedView !== 'signup' &&
-              savedView !== 'verify' &&
-              savedView !== 'admin'
-                ? savedView
-                : 'dashboard';
-            handleNavigate(targetView);
+            if (typeof window !== 'undefined') {
+              window.history.replaceState(null, '', '#dashboard');
+            }
+            handleNavigate('dashboard');
           }
         }}
         onContinueGuest={() => {
-          const savedView = (typeof localStorage !== 'undefined'
-            ? localStorage.getItem(VIEW_STORAGE_KEY)
-            : null) as ViewType;
-          const targetView =
-            savedView &&
-            savedView !== 'login' &&
-            savedView !== 'signup' &&
-            savedView !== 'verify' &&
-            savedView !== 'admin'
-              ? savedView
-              : 'dashboard';
-          handleNavigate(targetView);
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', '#dashboard');
+          }
+          handleNavigate('dashboard');
         }}
         onNavigateMode={mode => handleNavigate(mode)}
       />
