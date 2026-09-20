@@ -76,7 +76,7 @@ export const SlotSelectionView: React.FC<SlotSelectionViewProps> = ({
   const categoryLabel = sport.category === 'indoor' ? 'Indoor Games' : 'Turf & Grounds';
 
   return (
-    <div className="space-y-7 max-w-4xl mx-auto pb-24">
+    <div className="space-y-7 max-w-4xl mx-auto pb-48 md:pb-24">
       {/* Breadcrumb matching Screen 4 */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
         <button
@@ -150,7 +150,7 @@ export const SlotSelectionView: React.FC<SlotSelectionViewProps> = ({
       />
 
       {/* Bottom Sticky Selection Bar matching Screen 4 */}
-      <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 z-20 shadow-lg">
+      <div className="fixed bottom-[64px] md:bottom-0 left-0 md:left-64 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 sm:p-4 z-30 shadow-lg">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
             <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400 block">
