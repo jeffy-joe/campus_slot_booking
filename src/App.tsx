@@ -43,25 +43,21 @@ const SEARCH_ID_STORAGE_KEY = 'campus_sports_active_search_id_v3';
 const CONFIRMED_BOOKING_KEY = 'campus_sports_confirmed_booking_v3';
 
 function resolveInitialView(user: User | null): ViewType {
-  const hasUser = Boolean(user);
   const isAdmin = user?.isAdmin || user?.email === 'admin@campus.com';
 
   if (isAdmin) {
     return 'admin';
   }
 
-  // 1. Check window.location.hash (e.g. #indoor-games, #signup, #verify, #admin/bookings)
+  // 1. Check window.location.hash (e.g. #indoor-games, #turf-grounds, #booking-status, #announcements)
   if (typeof window !== 'undefined' && window.location.hash) {
     const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
     if (rawHash.startsWith('admin')) {
-      return isAdmin ? 'admin' : (hasUser ? 'dashboard' : 'login');
+      return isAdmin ? 'admin' : 'dashboard';
     }
     if (VALID_VIEWS.includes(rawHash as ViewType)) {
       if (rawHash === 'admin' && !isAdmin) {
-        return hasUser ? 'dashboard' : 'login';
-      }
-      if (!hasUser && !['login', 'signup', 'verify'].includes(rawHash)) {
-        return 'login';
+        return 'dashboard';
       }
       return rawHash as ViewType;
     }
@@ -72,19 +68,18 @@ function resolveInitialView(user: User | null): ViewType {
     const saved = localStorage.getItem(VIEW_STORAGE_KEY) as ViewType;
     if (saved && VALID_VIEWS.includes(saved)) {
       if (saved === 'admin' && !isAdmin) {
-        return hasUser ? 'dashboard' : 'login';
+        return 'dashboard';
       }
-      if (!hasUser && !['login', 'signup', 'verify'].includes(saved)) {
-        return 'login';
+      if (saved !== 'login' && saved !== 'signup' && saved !== 'verify') {
+        return saved;
       }
-      return saved;
     }
   } catch (e) {
     console.error('Failed to restore view from storage', e);
   }
 
-  // 3. Default fallback based on login state
-  return hasUser ? 'dashboard' : 'login';
+  // 3. Default fallback
+  return 'dashboard';
 }
 
 export function App() {
@@ -322,12 +317,11 @@ export function App() {
     handleNavigate('booking-status');
   };
 
-  // Render standalone AuthView when user is in login/signup/verify or unauthenticated
+  // Render standalone AuthView when user is explicitly in login/signup/verify mode
   if (
     currentView === 'login' ||
     currentView === 'signup' ||
-    currentView === 'verify' ||
-    !currentUser
+    currentView === 'verify'
   ) {
     const authMode = (['login', 'signup', 'verify'].includes(currentView)
       ? currentView
@@ -342,10 +336,34 @@ export function App() {
           if (isAdmin) {
             handleNavigate('admin');
           } else {
-            handleNavigate('dashboard');
+            const savedView = (typeof localStorage !== 'undefined'
+              ? localStorage.getItem(VIEW_STORAGE_KEY)
+              : null) as ViewType;
+            const targetView =
+              savedView &&
+              savedView !== 'login' &&
+              savedView !== 'signup' &&
+              savedView !== 'verify' &&
+              savedView !== 'admin'
+                ? savedView
+                : 'dashboard';
+            handleNavigate(targetView);
           }
         }}
-        onContinueGuest={() => handleNavigate('dashboard')}
+        onContinueGuest={() => {
+          const savedView = (typeof localStorage !== 'undefined'
+            ? localStorage.getItem(VIEW_STORAGE_KEY)
+            : null) as ViewType;
+          const targetView =
+            savedView &&
+            savedView !== 'login' &&
+            savedView !== 'signup' &&
+            savedView !== 'verify' &&
+            savedView !== 'admin'
+              ? savedView
+              : 'dashboard';
+          handleNavigate(targetView);
+        }}
         onNavigateMode={mode => handleNavigate(mode)}
       />
     );
